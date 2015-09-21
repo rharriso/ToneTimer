@@ -1,91 +1,73 @@
-/*
- * audio-service.js
- * Copyright (C) 2015 rharriso <rharriso@lappy>
- *
- * Distributed under terms of the MIT license.
- */
-(function(){
-  'use strict';
-  var app = angular.module('tone-timer.services', []);
-  
-   app.service('AudioService', [function() {
-   
-    var AudioService = {
-      my_media: null,
-      mediaTimer: null,
-      playAudio: function(src, cb) {
-        if (!window.Media) return this.playHTML(src, cb);
+angular.module('tone-timer.services', ['ionic'])
 
-        var self = this;
-   
-        // stop playing, if playing
-        self.stopAudio();
-   
-        self.my_media = new window.Media(src, onSuccess, onError);
-        self.my_media.play();
-   
-        if (self.mediaTimer == null) {
-          self.mediaTimer = setInterval(function() {
-            self.my_media.getCurrentPosition(
-              function(position) {
-                cb(position, self.my_media.getDuration());
-              },
-              function(e) {
-                console.log("Error getting pos=" + e);
-              }
-            );
-          }, 1000);
-        }
-   
-        function onSuccess() {
-          console.log("playAudio():Audio Success");
-        }
-   
-        // onError Callback
-        //
-        function onError(error) {
-          // alert('code: ' + error.code + '\n' +
-          //     'message: ' + error.message + '\n');
-   
-          // we forcefully stop
-   
-        }
-   
-      },
-   
-      resumeAudio: function() {
-        var self = this;
-        if (self.my_media) {
-          self.my_media.play();
-        }
-      },
-      pauseAudio: function() {
-        var self = this;
-        if (self.my_media) {
-          self.my_media.pause();
-        }
-      },
-      stopAudio: function() {
-        var self = this;
-        if (self.my_media) {
-          self.my_media.stop();
-        }
-        if (self.mediaTimer) {
-          clearInterval(self.mediaTimer);
-          self.mediaTimer = null;
-        }
-      },
-      
-      playHTML: function(src, cb){
-        console.log("Play HTML");
-        this.my_media = this.my_media ||
-          document.createElement("audio"); 
+// for media plugin : http://plugins.cordova.io/#/package/org.apache.cordova.media
+.factory('AudioService', function($q, $ionicPlatform, $window){
+  var service = {
+    loadMedia: loadMedia,
+    playMedia: playMedia,
+    getStatusMessage: getStatusMessage,
+    getErrorMessage: getErrorMessage
+  };
 
-        this.my_media.src = "http://localhost:8100/"+src;
-        this.my_media.play();
-      },
-    };
-   
-    return AudioService;
-  }]);
-})();
+  function playMedia(src){
+    loadMedia(src).then(function(media){
+      media.play();
+    });
+  }
+
+  function loadMedia(src, onStop, onError, onStatus){
+    var defer = $q.defer();
+    $ionicPlatform.ready(function(){
+      var mediaStatus = {
+        code: 0,
+        text: getStatusMessage(0)
+      };
+      var mediaSuccess = function(){
+        mediaStatus.code = 4;
+        mediaStatus.text = getStatusMessage(4);
+        if(onStop){onStop();}
+      };
+      var mediaError = function(err){
+        _logError(src, err);
+        if(onError){onError(err);}
+      };
+      var mediaStatus = function(status){
+        mediaStatus.code = status;
+        mediaStatus.text = getStatusMessage(status);
+        if(onStatus){onStatus(status);}
+      };
+
+      if($ionicPlatform.is('android')){src = '/android_asset/www/' + src;}
+      var media = new $window.Media(src, mediaSuccess, mediaError, mediaStatus);
+      media.status = mediaStatus;
+      defer.resolve(media);
+    });
+    return defer.promise;
+  }
+
+  function _logError(src, err){
+    console.error('MediaSrv error', {
+      code: err.code,
+      text: getErrorMessage(err.code)
+    });
+  }
+
+  function getStatusMessage(status){
+    if(status === 0){return 'Media.MEDIA_NONE';}
+    else if(status === 1){return 'Media.MEDIA_STARTING';}
+    else if(status === 2){return 'Media.MEDIA_RUNNING';}
+    else if(status === 3){return 'Media.MEDIA_PAUSED';}
+    else if(status === 4){return 'Media.MEDIA_STOPPED';}
+    else {return 'Unknown status <'+status+'>';}
+  }
+
+  function getErrorMessage(code){
+    if(code === 1){return 'MediaError.MEDIA_ERR_ABORTED';}
+    else if(code === 2){return 'MediaError.MEDIA_ERR_NETWORK';}
+    else if(code === 3){return 'MediaError.MEDIA_ERR_DECODE';}
+    else if(code === 4){return 'MediaError.MEDIA_ERR_NONE_SUPPORTED';}
+    else {return 'Unknown code <'+code+'>';}
+  }
+
+  return service;
+});

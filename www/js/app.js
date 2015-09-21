@@ -60,11 +60,11 @@
       console.log(round);
 
       if(round % 30 == 0){
-        audio.playAudio("audio/tone-victory.mp3", console.log);
+        audio.playMedia("audio/tone-victory.mp3");
       } else if(round % 10 == 0){
-        audio.playAudio("audio/tone-out.mp3", console.log);
+        audio.playMedia("audio/tone-out.mp3");
       } else if(round % 5 == 0){
-        audio.playAudio("audio/tone-in.mp3", console.log);
+        audio.playMedia("audio/tone-in.mp3");
       }
     }
   }

@@ -1,1 +1,33 @@
 /* Empty. Add your own CSS if you like */
+
+html, body, .pane{
+  background-color: #222;
+  color: #EEE;
+}
+
+.bar-footer{
+  margin: 0;
+  padding: 0;
+  position: absolute;
+}
+
+.clock{
+  display: block;
+  margin: 100px auto;
+  text-align: center;
+  font-size: 0;
+}
+
+.seconds, .milliseconds {
+  display: inline-block; 
+  font-size: 160px;
+  text-align: right;
+  width: 50%;
+  margin: 0;
+  padding: 0;
+}
+
+.milliseconds{
+  font-size: 50px;
+  text-align: left;
+}

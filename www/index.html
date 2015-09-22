@@ -27,29 +27,24 @@
   </head>
   <body ng-app="starter" ng-cloak>
 
-    <ion-pane>
-      <ion-header-bar class="bar-stable">
-        <h1 class="title">Tone Timer</h1>
-      </ion-header-bar>
+    <ion-pane ng-controller="TimerController as timeCtrl">
       <ion-content>
-          <section ng-controller="TimerController as timeCtrl">
-          <button 
-            class="button button-balanced"
-            ng-hide="timeCtrl.playing" ng-click="timeCtrl.start()">
-            Start
-          </button>
-          <button
-            class="button button-energized"
-            ng-show="timeCtrl.playing" ng-click="timeCtrl.stop()">
-            Stop
-          </button>
-          <button
-            class="button button-assertive"
-            ng-hide="timeCtrl.playing" ng-click="timeCtrl.reset()">
-            Reset 
-          </button>
-        </section>
+        <div class="clock">
+          <div class="seconds">{{timeCtrl.currentSeconds}}</div>
+          <div class="milliseconds">{{timeCtrl.currentMilliSeconds}}</div>
+        </div>
       </ion-content>
+      <div class="button-bar bar-footer">
+        <button 
+          class="button button-balanced icon-right ion-play"
+          ng-hide="timeCtrl.playing" ng-click="timeCtrl.start()">Start</button>
+        <button
+          class="button button-energized icon-right ion-pause"
+          ng-show="timeCtrl.playing" ng-click="timeCtrl.pause()">Pause</button>
+        <button
+          class="button button-assertive icon-right ion-minus-circled"
+          ng-click="timeCtrl.reset()">Reset</button>
+      </div>
     </ion-pane>
   </body>
 </html>

@@ -22,39 +22,58 @@
   })
 
 
-  function TimerController($scope, $element, audio){
-    this.interval;
+  function TimerController($scope, $element, $interval, audio){
+    this.tickInterval;
+    this.sweepInterval;
     this.time0;
     this.totalTime = 0;
+    this.currentSeconds = 0;
+    this.currentMilliSeconds = 0;
     this.playing = false;
     var _this = this;
       
     this.start = function(){
       console.log("start");
       this.time0 = this.time0 || new Date();
-      this.interval = setInterval(tick, 1000);
+      this.tickInterval = $interval(tick, 1000);
+      this.sweepInterval = $interval(sweep, 10);
       this.playing = true;
     };
     
-    this.stop = function(){
-      console.log("stop"); 
-      clearInterval(this.interval);
+    this.pause = function(){
+      console.log("pause"); 
+      $interval.cancel(this.tickInterval);
+      $interval.cancel(this.sweepInterval);
       this.time0 = null;
       this.playing = false;
     };
     
     this.reset = function(){
       console.log("reset"); 
-      this.stop();
-      this.interval = null;
+      this.pause();
+      this.tickInterval = null;
+      this.sweepInterval = null;
       this.totalTime = 0;
+      this.currentSeconds = 0;
+      this.currentMilliSeconds = 0;
     };
 
-    function tick(){
+    function updateTime(){
       var time1 = new Date();
       _this.totalTime += time1 - _this.time0;
       _this.time0 = time1;
-      console.log("now", _this.totalTime); 
+    }
+
+    function sweep(){
+      updateTime();
+      var seconds = _this.totalTime / 1000
+      _this.currentSeconds = Math.floor(seconds);
+      _this.currentMilliSeconds = Math.floor((seconds - _this.currentSeconds) * 100);
+      console.log(_this.currentSeconds, _this.currentMilliSeconds); 
+    }
+
+    function tick(){
+      updateTime();
 
       var round = Math.floor(_this.totalTime / 1000);
       console.log(round);
@@ -68,7 +87,7 @@
       }
     }
   }
-  TimerController.$inject = ['$scope', '$element', 'AudioService'];
+  TimerController.$inject = ['$scope', '$element', '$interval', 'AudioService'];
   app.controller('TimerController', TimerController);
 
 })();

@@ -69,7 +69,6 @@
       var seconds = _this.totalTime / 1000
       _this.currentSeconds = Math.floor(seconds);
       _this.currentMilliSeconds = Math.floor((seconds - _this.currentSeconds) * 100);
-      console.log(_this.currentSeconds, _this.currentMilliSeconds); 
     }
 
     function tick(){

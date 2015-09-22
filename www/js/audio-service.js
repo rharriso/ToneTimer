@@ -37,6 +37,18 @@ angular.module('tone-timer.services', ['ionic'])
         if(onStatus){onStatus(status);}
       };
 
+
+      // create and play with audio tag
+      if($ionicPlatform.is('browser')){ 
+        $("audio, video").remove();
+        var media = document.createElement("audio");
+        document.body.appendChild(media);
+        media.src = src;
+        defer.resolve(media);
+        return defer
+      }
+
+      // play through cordova
       if($ionicPlatform.is('android')){src = '/android_asset/www/' + src;}
       var media = new $window.Media(src, mediaSuccess, mediaError, mediaStatus);
       media.status = mediaStatus;

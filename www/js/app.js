@@ -21,6 +21,19 @@
     });
   })
 
+  // formats a number to show up to 1 leading zero
+  app.filter('tensplace', function(){
+    return function(input){
+      var out = Math.floor(input);
+      
+      if(input < 10){
+        out = "0"+input;
+      }
+
+      return out;
+    } 
+  });
+
 
   function TimerController($scope, $element, $interval, audio){
     this.tickInterval;

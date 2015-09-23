@@ -29,7 +29,7 @@
 
     <ion-pane ng-controller="TimerController as timeCtrl">
       <ion-content>
-        <div class="clock">{{timeCtrl.currentSeconds}}<span class="milliseconds">{{timeCtrl.currentMilliSeconds}}</span>
+        <div class="clock">{{timeCtrl.currentSeconds}}<span class="milliseconds">{{timeCtrl.currentMilliSeconds | tensplace }}</span>
         </div>
       </ion-content>
       <div class="button-bar bar-footer">

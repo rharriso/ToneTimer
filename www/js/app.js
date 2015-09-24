@@ -126,14 +126,13 @@
       var stateIndex = calcStateIndex(loopTime);
       var currState = states[stateIndex];
       var stateTime = loopTime - stateStartTime(currState);
-      console.log(loopTime, _this.totalTime % totalTime(), stateIndex);
+      console.log(loopTime, stateTime, stateIndex);
 
       // if within a tenth of a second of tick time, play sound
       if(stateTime % currState.tick === 0){
-        console.log(!!currState, stateTime - currState.duration, currState.tick);
         // play final audio?
         if(!!currState.finalAudio && 
-             currState.duration - stateTime === currState.tick){
+             currState.duration - stateTime === 0){
           console.log("play final audio");
           audio.playMedia(currState.finalAudio);
 
@@ -169,7 +168,7 @@
     function calcStateIndex(currTime){
       var startTime = 0;
       for(var i=0; i < states.length; i++){
-        if(currTime < (startTime + states[i].duration)){
+        if(currTime <= (startTime + states[i].duration)){
           return i;
         }
         startTime += states[i].duration;

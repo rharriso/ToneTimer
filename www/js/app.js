@@ -8,6 +8,31 @@
   var app = angular.module('starter',
     ['ionic', 'tone-timer.services']);
 
+  var defaults = {
+    prepTime: 5,
+    intervalOn: 30,
+    intervalOff: 30
+  }
+
+  var states = [
+    { name: "prep",
+      duration: 5000,
+      tick: 1000,
+      audio: ["audio/tick.mp3"],
+      finalAudio: "audio/start.mp3" },
+    { name: "intervalOn",
+      duration: 30000,
+      tick: 5000,
+      audio: ["audio/tone-in.mp3", "audio/tone-out.mp3"],
+      finalAudio: "audio/tone-victory.mp3"},
+    { name: "intervalOn",
+      duration: 30000,
+      tick: 5000,
+      audio: ["audio/tick.mp3"]}
+  ]
+
+  var stateIndex = 0;
+
   app.run(function($ionicPlatform) {
     $ionicPlatform.ready(function() {
       // Hide the accessory bar by default (remove this to show the accessory bar above the keyboard
@@ -71,12 +96,18 @@
       this.currentMilliSeconds = 0;
     };
 
+    /*
+     * Update the current time
+     */
     function updateTime(){
       var time1 = new Date();
       _this.totalTime += time1 - _this.time0;
       _this.time0 = time1;
     }
 
+    /*
+     * Sweep the time display
+     */
     function sweep(){
       updateTime();
       var seconds = _this.totalTime / 1000
@@ -84,19 +115,78 @@
       _this.currentMilliSeconds = Math.floor((seconds - _this.currentSeconds) * 100);
     }
 
+
+    /*
+     * On Tick check and play sound state
+     */
     function tick(){
-      updateTime();
+    updateTime();
+      // how long have we been in this loop? 
+      var loopTime = Math.round((_this.totalTime % totalTime())/1000)*1000; // floor to 1000
+      var stateIndex = calcStateIndex(loopTime);
+      var currState = states[stateIndex];
+      var stateTime = loopTime - stateStartTime(currState);
+      console.log(loopTime, _this.totalTime % totalTime(), stateIndex);
 
-      var round = Math.floor(_this.totalTime / 1000);
-      console.log(round);
+      // if within a tenth of a second of tick time, play sound
+      if(stateTime % currState.tick === 0){
+        console.log(!!currState, stateTime - currState.duration, currState.tick);
+        // play final audio?
+        if(!!currState.finalAudio && 
+             currState.duration - stateTime === currState.tick){
+          console.log("play final audio");
+          audio.playMedia(currState.finalAudio);
 
-      if(round % 30 == 0){
-        audio.playMedia("audio/tone-victory.mp3");
-      } else if(round % 10 == 0){
-        audio.playMedia("audio/tone-out.mp3");
-      } else if(round % 5 == 0){
-        audio.playMedia("audio/tone-in.mp3");
+          // which file to play
+        } else{
+          var tickIndex = Math.round(stateTime / currState.tick) % currState.audio.length
+          audio.playMedia(currState.audio[tickIndex]);
+        }
       }
+    }
+
+    /*
+     * Get the start time of the current
+     */ 
+    function stateStartTime(state){
+      var startTime = 0;
+      for(var i=0; states[i] !== state ; i++){
+        startTime += states[i].duration;
+      }  
+      return startTime;
+    }
+
+    /*
+     * Get the end time of the current state
+     */ 
+    function stateEndTime(){
+      return stateStartTime() + states[stateIndex].duration;      
+    }
+
+    /*
+     * Get current state from time index (in milliseconds)
+     */
+    function calcStateIndex(currTime){
+      var startTime = 0;
+      for(var i=0; i < states.length; i++){
+        if(currTime < (startTime + states[i].duration)){
+          return i;
+        }
+        startTime += states[i].duration;
+      }
+
+      throw new Error("Unable to find state for time :"+currTime);
+    }
+
+    /*
+     * Get the total duration of all states
+     */
+    function totalTime(){
+      var total = 0;
+      for(var i=0; i < states.length ; i++){
+        total += states[i].duration;
+      }  
+      return total;
     }
   }
   TimerController.$inject = ['$scope', '$element', '$interval', 'AudioService'];

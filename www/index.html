@@ -28,6 +28,11 @@
   <body ng-app="starter" ng-cloak>
 
     <ion-pane ng-controller="TimerController as timeCtrl">
+      <div class="bar bar-header">
+        <h1 class="title">Tone Timer</h1>
+        <button ng-click="timeCtrl.showSettings()" class="button">Settings</button>
+      </div>
+
       <ion-content>
         <div class="clock">{{timeCtrl.currentSeconds}}<span class="milliseconds">{{timeCtrl.currentMilliSeconds | tensplace }}</span>
         </div>

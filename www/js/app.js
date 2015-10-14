@@ -5,31 +5,9 @@
 // the 2nd parameter is an array of 'requires'
 (function(){
   'use strict';
+
   var app = angular.module('starter',
-    ['ionic', 'tone-timer.services']);
-
-  var defaults = {
-    prepTime: 5,
-    intervalOn: 30,
-    intervalOff: 30
-  }
-
-  var states = [
-    { name: "prep",
-      duration: 5000,
-      tick: 1000,
-      audio: ["audio/tick.mp3"],
-      finalAudio: "audio/start.mp3" },
-    { name: "intervalOn",
-      duration: 30000,
-      tick: 5000,
-      audio: ["audio/tone-in.mp3", "audio/tone-out.mp3"],
-      finalAudio: "audio/tone-victory.mp3"},
-    { name: "intervalOn",
-      duration: 30000,
-      tick: 5000,
-      audio: ["audio/tick.mp3"]}
-  ]
+      ['ionic', 'tone-timer.services']);
 
   var stateIndex = 0;
 
@@ -50,7 +28,7 @@
   app.filter('tensplace', function(){
     return function(input){
       var out = Math.floor(input);
-      
+
       if(input < 10){
         out = "0"+input;
       }
@@ -60,7 +38,7 @@
   });
 
 
-  function TimerController($scope, $element, $interval, audio){
+  function TimerController($scope, $element, $interval, audio, $ionicModal){
     this.tickInterval;
     this.sweepInterval;
     this.time0;
@@ -69,7 +47,58 @@
     this.currentMilliSeconds = 0;
     this.playing = false;
     var _this = this;
-      
+
+    var states = [
+    { name: "prep",
+      duration: function(){
+        return 5000;
+      },
+      tick: 1000,
+      audio: ["audio/tick.mp3"],
+      finalAudio: "audio/start.mp3" },
+    { name: "intervalOn",
+      duration: function(){
+        return $scope.settings.intervalDuration * 1000;
+      },
+      tick: 5000,
+      audio: ["audio/tone-in.mp3", "audio/tone-out.mp3"],
+      finalAudio: "audio/tone-victory.mp3"},
+      { name: "intervalOn",
+        duration: function(){
+          return $scope.settings.breakDuration * 1000;
+        },
+        tick: 5000,
+        audio: ["audio/tick.mp3"]}
+    ];
+
+    try{
+      $scope.settings = JSON.parse(localStorage.getItem("settings"));
+    } catch (e) {
+      console.error(e);
+    }
+
+    $scope.settings = $scope.settings || {
+      breakDuration: 45,
+      intervalDuration: 30
+    };
+
+    $scope.modalClose = function(){
+      localStorage.setItem("settings",
+          JSON.stringify($scope.settings));
+      $scope.modal.hide();
+    };
+
+    this.showSettings = function(){
+      this.reset();
+      $ionicModal.fromTemplateUrl('settings-modal.html', {
+        animation: "slide-in-up",
+        scope: $scope
+      }).then(function(modal){
+        $scope.modal = modal;
+        modal.show();
+      });
+    };
+
     this.start = function(){
       console.log("start");
       this.time0 = this.time0 || new Date();
@@ -77,7 +106,7 @@
       this.sweepInterval = $interval(sweep, 10);
       this.playing = true;
     };
-    
+
     this.pause = function(){
       console.log("pause"); 
       $interval.cancel(this.tickInterval);
@@ -85,7 +114,7 @@
       this.time0 = null;
       this.playing = false;
     };
-    
+
     this.reset = function(){
       console.log("reset"); 
       this.pause();
@@ -111,7 +140,7 @@
     function sweep(){
       updateTime();
       var seconds = _this.totalTime / 1000
-      _this.currentSeconds = Math.floor(seconds);
+        _this.currentSeconds = Math.floor(seconds);
       _this.currentMilliSeconds = Math.floor((seconds - _this.currentSeconds) * 100);
     }
 
@@ -120,7 +149,7 @@
      * On Tick check and play sound state
      */
     function tick(){
-    updateTime();
+      updateTime();
       // how long have we been in this loop? 
       var loopTime = Math.round((_this.totalTime % totalTime())/1000)*1000; // floor to 1000
       var stateIndex = calcStateIndex(loopTime);
@@ -132,14 +161,14 @@
       if(stateTime % currState.tick === 0){
         // play final audio?
         if(!!currState.finalAudio && 
-             currState.duration - stateTime === 0){
+            currState.duration() - stateTime === 0){
           console.log("play final audio");
           audio.playMedia(currState.finalAudio);
 
           // which file to play
         } else{
           var tickIndex = Math.round(stateTime / currState.tick) % currState.audio.length
-          audio.playMedia(currState.audio[tickIndex]);
+            audio.playMedia(currState.audio[tickIndex]);
         }
       }
     }
@@ -150,7 +179,7 @@
     function stateStartTime(state){
       var startTime = 0;
       for(var i=0; states[i] !== state ; i++){
-        startTime += states[i].duration;
+        startTime += states[i].duration();
       }  
       return startTime;
     }
@@ -159,7 +188,7 @@
      * Get the end time of the current state
      */ 
     function stateEndTime(){
-      return stateStartTime() + states[stateIndex].duration;      
+      return stateStartTime() + states[stateIndex].duration();      
     }
 
     /*
@@ -168,10 +197,10 @@
     function calcStateIndex(currTime){
       var startTime = 0;
       for(var i=0; i < states.length; i++){
-        if(currTime <= (startTime + states[i].duration)){
+        if(currTime <= (startTime + states[i].duration())){
           return i;
         }
-        startTime += states[i].duration;
+        startTime += states[i].duration();
       }
 
       throw new Error("Unable to find state for time :"+currTime);
@@ -183,12 +212,12 @@
     function totalTime(){
       var total = 0;
       for(var i=0; i < states.length ; i++){
-        total += states[i].duration;
+        total += states[i].duration();
       }  
       return total;
     }
   }
-  TimerController.$inject = ['$scope', '$element', '$interval', 'AudioService'];
+  TimerController.$inject = ['$scope', '$element', '$interval', 'AudioService', "$ionicModal"];
   app.controller('TimerController', TimerController);
 
 })();
